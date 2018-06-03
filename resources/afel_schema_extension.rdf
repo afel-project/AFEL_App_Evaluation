@@ -1,0 +1,224 @@
+<?xml version="1.0"?>
+<rdf:RDF 
+     xml:base="http://vocab.afel-project.eu/extension/"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     xmlns:dcterms="http://purl.org/dc/terms/"
+     xmlns:owl="http://www.w3.org/2002/07/owl#"
+     xmlns:xml="http://www.w3.org/XML/1998/namespace"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:foaf="http://xmlns.com/foaf/0.1/"
+     xmlns:void="http://rdfs.org/ns/void#"
+     xmlns:xs="http://www.w3.org/TR/xmlschema11-2/#"
+     xmlns:cw="http://schema.org/CreativeWork"
+	 xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#"
+	 xmlns:schema="http://schema.org/"
+	 xmlns:sioc="http://rdfs.org/sioc/types#"
+	 xmlns:bibo="http://purl.org/ontology/bibo/"
+     xmlns:afl="http://vocab.afel-project.eu/">
+     
+    <rdf:Description rdf:about="http://vocab.afel-project.eu/extension/">
+		<dcterms:title xml:lang="en"></dcterms:title>
+		<rdfs:comment xml:lang="en">The 'afel' extension schema has been developed in context of the AFEL project.</rdfs:comment>
+		<owl:versionInfo>0.1, June 01, 2018</owl:versionInfo>
+		<dcterms:creator>
+			<rdf:Description>
+				<foaf:name>AFEL Project</foaf:name>
+				<foaf:mbox>afel@insight-centre.org</foaf:mbox>
+			</rdf:Description>
+		</dcterms:creator>
+	</rdf:Description>
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Classes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    <!-- Classes for Didactalia traces -->
+    <rdfs:Class rdf:about="Search">
+		<rdfs:label>Search Activity</rdfs:label>
+		<rdfs:subClassOf rdf:resource="schema:SearchAction"/>
+		<rdfs:subClassOf rdf:resource="afl:UserActivity"/>
+	</rdfs:Class>
+
+	<rdfs:Class rdf:about="FacetAdd">
+		<rdfs:label>Facet Add Activity</rdfs:label>
+		<rdfs:subClassOf rdf:resource="SearchActivity"/>
+	</rdfs:Class>
+	
+	<rdfs:Class rdf:about="FacetRemove">
+		<rdfs:label>Facet Remove Activity</rdfs:label>
+		<rdfs:subClassOf rdf:resource="SearchActivity"/>
+	</rdfs:Class>
+	
+	<rdfs:Class rdf:about="GameAttributeChange">
+		<rdfs:label>Game Attribute Change Activity</rdfs:label>
+		<rdfs:subClassOf rdf:resource="afl:UserActivity"/>
+	</rdfs:Class>
+	
+	<rdfs:Class rdf:about="GamePlayed">
+		<rdfs:label>Game Activity</rdfs:label>
+		<rdfs:subClassOf rdf:resource="afl:ArtifactPlayed"/>
+	</rdfs:Class>
+	
+	<rdfs:Class rdf:about="DidactaliaGamePlayed">
+		<rdfs:label>Didactalia Game Activity</rdfs:label>
+		<rdfs:subClassOf rdf:resource="GamePlayed"/>
+	</rdfs:Class>
+	<!-- End Classes for Didactalia traces -->
+	
+	<!-- Classes for AFEL Application traces -->
+	<rdfs:Class rdf:about="RecommendedArtifactView">
+		<rdfs:label>Recommended Artifact View</rdfs:label>
+		<rdfs:subClassOf rdf:resource="afl:ArtifactView"/>
+	</rdfs:Class>
+	
+	<rdfs:Class rdf:about="ScopeView">
+		<rdfs:label>Scope View</rdfs:label>
+		<rdfs:subClassOf rdf:resource="afl:ArtifactView"/>
+	</rdfs:Class>
+	
+	<rdfs:Class rdf:about="GUIInteraction">
+		<rdfs:label>GUI Interaction</rdfs:label>
+		<rdfs:subClassOf rdf:resource="afl:UserActivity"/>
+	</rdfs:Class>
+	
+	<rdfs:Class rdf:about="GoBack">
+		<rdfs:label>Go back into the application</rdfs:label>
+		<rdfs:subClassOf rdf:resource="GUIInteraction"/>
+	</rdfs:Class>
+	
+	<rdfs:Class rdf:about="DisplayChange">
+		<rdfs:label>Change display</rdfs:label>
+		<rdfs:subClassOf rdf:resource="GUIInteraction"/>
+	</rdfs:Class>
+	<!-- End Classes for AFEL Application traces -->
+	
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+    
+    <!-- GoBack Properties -->
+    <rdf:Property rdf:about="destination">
+		<rdfs:label>Destination</rdfs:label>
+		<rdfs:domain rdf:resource="GoBack"/>
+		<rdfs:range rdf:resource="xsd:String"/>
+	</rdf:Property>
+    <!-- End GoBack Properties -->
+    
+    <!-- DisplayChange Properties -->
+    <rdf:Property rdf:about="display">
+		<rdfs:label>Display</rdfs:label>
+		<rdfs:domain rdf:resource="DisplayChange"/>
+		<rdfs:range rdf:resource="xsd:String"/>
+	</rdf:Property>
+    <!-- End DisplayChange Properties -->
+    
+    <!-- Facet Properties -->
+    <rdf:Property rdf:about="facet">
+		<rdfs:label>Facet</rdfs:label>
+		<rdfs:domain rdf:resource="Search"/>
+		<rdfs:range rdf:resource="xsd:String"/>
+	</rdf:Property>
+    <!-- End Facet -->
+    
+    <!-- GamePlayed Properties -->
+    <rdf:Property rdf:about="language">
+		<rdfs:label>Label state</rdfs:label>
+		<rdfs:domain rdf:resource="DidactaliaGamePlayed"/>
+		<rdfs:range rdf:resource="xsd:String"/>
+	</rdf:Property>
+    <rdf:Property rdf:about="labelState">
+		<rdfs:label>Label state</rdfs:label>
+		<rdfs:domain rdf:resource="DidactaliaGamePlayed"/>
+		<rdfs:range rdf:resource="xsd:String"/>
+	</rdf:Property>
+	<rdf:Property rdf:about="audioState">
+		<rdfs:label>Audio state</rdfs:label>
+		<rdfs:domain rdf:resource="DidactaliaGamePlayed"/>
+		<rdfs:range rdf:resource="xsd:String"/>
+	</rdf:Property>
+	<rdf:Property rdf:about="answersDetailsState">
+		<rdfs:label>Answers details state</rdfs:label>
+		<rdfs:domain rdf:resource="DidactaliaGamePlayed"/>
+		<rdfs:range rdf:resource="xsd:String"/>
+	</rdf:Property>
+	<rdf:Property rdf:about="longitude">
+		<rdfs:label>Longitude</rdfs:label>
+		<rdfs:domain rdf:resource="DidactaliaGamePlayed"/>
+		<rdfs:range rdf:resource="xsd:decimal"/>
+	</rdf:Property>
+	<rdf:Property rdf:about="latitude">
+		<rdfs:label>Latitude</rdfs:label>
+		<rdfs:domain rdf:resource="DidactaliaGamePlayed"/>
+		<rdfs:range rdf:resource="xsd:decimal"/>
+	</rdf:Property>
+	<rdf:Property rdf:about="zoomLevel">
+		<rdfs:label>Zoom level</rdfs:label>
+		<rdfs:domain rdf:resource="DidactaliaGamePlayed"/>
+		<rdfs:range rdf:resource="xsd:int"/>
+	</rdf:Property>
+	<rdf:Property rdf:about="correctAtFirst">
+		<rdfs:label>Correct at First</rdfs:label>
+		<rdfs:domain rdf:resource="DidactaliaGamePlayed"/>
+		<rdfs:range rdf:resource="xsd:int"/>
+	</rdf:Property>
+	<rdf:Property rdf:about="correctAtSecond">
+		<rdfs:label>Correct at second</rdfs:label>
+		<rdfs:domain rdf:resource="DidactaliaGamePlayed"/>
+		<rdfs:range rdf:resource="xsd:int"/>
+	</rdf:Property>
+	<rdf:Property rdf:about="correctAtThird">
+		<rdfs:label>Correct at third</rdfs:label>
+		<rdfs:domain rdf:resource="DidactaliaGamePlayed"/>
+		<rdfs:range rdf:resource="xsd:int"/>
+	</rdf:Property>
+	<rdf:Property rdf:about="correctAtFourth">
+		<rdfs:label>Correct at fourth</rdfs:label>
+		<rdfs:domain rdf:resource="DidactaliaGamePlayed"/>
+		<rdfs:range rdf:resource="xsd:int"/>
+	</rdf:Property>
+	<rdf:Property rdf:about="totalElements">
+		<rdfs:label>total elements</rdfs:label>
+		<rdfs:domain rdf:resource="DidactaliaGamePlayed"/>
+		<rdfs:range rdf:resource="xsd:int"/>
+	</rdf:Property>
+	<rdf:Property rdf:about="score">
+		<rdfs:label>score</rdfs:label>
+		<rdfs:domain rdf:resource="DidactaliaGamePlayed"/>
+		<rdfs:range rdf:resource="xsd:int"/>
+	</rdf:Property>
+    <!-- End GamePlayed Properties -->
+     
+    <!--- GameAttributeChange Properties -->
+    <rdf:Property rdf:about="gamePropertyName">
+		<rdfs:label>Game Property Name</rdfs:label>
+		<rdfs:domain rdf:resource="GameAttributeChange"/>
+		<rdfs:range rdf:resource="xsd:String"/>
+	</rdf:Property>
+	
+	<rdf:Property rdf:about="gamePropertyValue">
+		<rdfs:label>Game Property Value</rdfs:label>
+		<rdfs:domain rdf:resource="GameAttributeChange"/>
+		<rdfs:range rdf:resource="xsd:String"/>
+	</rdf:Property>
+	<!--- End GameAttributeChange Properties -->
+	
+	<!-- Redefine user property in UserActivity to male it equivalent to agent and actor -->
+	<rdf:Property rdf:about="user">
+		<rdfs:label>Activity User</rdfs:label>
+		<rdfs:domain rdf:resource="UserActivity"/>
+		<rdfs:range rdf:resource="User"/>
+		<owl:equivalentProperty rdf:resource="schema:agent" />
+		<owl:equivalentProperty rdf:resource="schema:actor" />
+	</rdf:Property>
+</rdf:RDF>
+

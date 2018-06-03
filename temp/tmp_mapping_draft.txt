@@ -1,0 +1,92 @@
+Mapping traces -rdf
+
+DEMANDER A MATHIEU :
+	si un objet herite de 2 objet : doit on utiliser les attributs redondant de noms differents ?
+
+- Inquietude trace didactaia : stockage du cookie de session ?!
+- Erreur dans le code source generateur de traces :
+	- traces of actionType == 'playStart' have type 'play' and not 'http://vocab.afel-project.eu/UserActivity'
+	- traces of type == 'resourcePlayed' (without any actionType) should have type == 'http://vocab.afel-project.eu/UserActivity' and actionType == 'resourcePlayed'
+	- traces of actionType {'answersDetailsStateChange', 'audioStateChange', 'labelStateChange', 'languageChange',  'playEnd', 'playStudyChange'} does not have any type and should have a type 'http://vocab.afel-project.eu/UserActivity'
+	- traces of type == 'resourceVisited' (wuhtout any actionType) should have type == 'http://vocab.afel-project.eu/UserActivity' and actionType == 'resourceVisited'
+
+traces : are PlayStart etc relative to a game ?	
+
+-vocab : 
+	propriété eventAgent de Event : devrait avoir en equivalent schema:Agent et schema:actor
+	pourquoi propriété user dans USerActivity?
+	User inherits of person and learner inherits of Person?
+	l 840 / 845 : label = ID ?
+	user inherits of Person and have a Person attribute?
+	
+l 839
+	
+
+traces activités didactalia
+
+Traces : x['_source'] for x in my_json['hits']['hits'] # Yes, double hits!
+2 types of traces : with key "actionType", and without
+With key "actionType":  defined in vocab
+
+type == http://vocab.afel-project.eu/UserActivity
+	- labelStateChange
+	- languageChange
+	- audioStateChange
+	- facetsSearchRemove
+	- playStart
+	- playEnd
+	- answersDetailsStateChange
+	- freeTextSearch
+	- playStudyChange
+	- facetsSearchAdd
+	- resourcePlayed (to look at source, does not have any actionType) -> We don't care : the game
+	- resourceVisited (to look at source, does not have any actionType)
+
+Mapping RDF	
+
+http://vocab.afel-project.eu/UserActivity -> schema:Event & schema:Action
+	- actionType (Ucommon) : about (Thing :: name)
+	- date (Ucommon) : startDate & endDate : Datetime in ISO 8601 date format
+	- user_id (Ucommon) : actor & agent (Learner -> Person -> schema:Person)
+	- community_id (Ucommon) : DO NOT USE ????
+	
+	- playSession (common7: playStart & languageChange & playStudyChange & playEnd & audioStateChange & answersDetailsStateChange & labelStateChange) : superEvent
+	- resource_id (common7: playStart & languageChange & playStudyChange & playEnd & audioStateChange & answersDetailsStateChange & labelStateChange) : object
+	
+	- gameLanguage (common3: playStart & languageChange & playEnd)
+	
+	- labelState (common2: labelStateChange & playStart)
+	- answersDetailsState (common2: answersDetailsStateChange & playStart)
+	- facet (common2: facetsSearchAdd & facetsSearchRemove)
+	- audioState (common2: playStart & audioStateChange)
+	- Item (common2: resourcePlayed & resourceVisited)
+	
+	- search_text (freeTextSearch)
+	- state (playStudyChange)
+	- referer_url (resourceVisited)
+	
+	- longitude (playStart)
+	- latitude (playStart)
+	- zoomLevel (playStart)
+	
+	- elapsedTime (playEnd)
+	- correctAtFirst (playEnd)
+	- correctAtSecond (playEnd)
+	- correctAtThird (playEnd)
+	- correctAtFourth (playEnd)
+	- totalElements (playEnd)
+	- score (playEnd)
+	
+	- Year (Ucommon) : DO NOT USE
+	- indexed_by (Ucommon) : DO NOT USE
+	- Seconds (Ucommon) : DO NOT USE
+	- Minutes (Ucommon) : DO NOT USE
+	- Day (Ucommon) : DO NOT USE
+	- Month (Ucommon) : DO NOT USE
+	- cookie_user (Ucommon) : DO NOT USE
+	- Day of Week (Ucommon) : DO NOT USE
+	- type (common6) : DO NOT USE
+	- Hour (common) : DO NOT USE
+	
+	
+All are UserActivity

@@ -1,0 +1,21 @@
+version: '3.2'
+#Service declaration
+services:
+    afel_eval2:
+        image: "stain/jena-fuseki"
+        environment:
+            - ADMIN_PASSWORD=afelpwd
+            - JVM_ARGS=-Xmx2g #2Go allowed by default
+        #persistent volume for the data
+        volumes:
+            - type: volume
+              source: fusekidata
+              target: /fuseki
+        #If you need to change the expose Fuseki on a different port, you also need to change the command!
+        ports:
+            - "3030:3030"
+        command: ./fuseki-server --port=3030
+
+#Volumes declaration
+volumes:
+    fusekidata:
