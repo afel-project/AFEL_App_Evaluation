@@ -104,6 +104,7 @@
 		<rdfs:subClassOf rdf:resource="schema:CreativeWork"/>
 	</rdfs:Class>
 	<!-- End Classes for AFEL Evaluation -->
+	<!--
     ///////////////////////////////////////////////////////////////////////////////////////
     //
     // Properties
