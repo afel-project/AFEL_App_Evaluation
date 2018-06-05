@@ -61,6 +61,9 @@ The server relies on docker-compose. To launch it, execute the following command
 To shut down the container, execute the following command from the same folder:
 
     docker-compose down
+    
+Once launcher, one can access the server with any browser, at the adress [http://localhost:3030](http://localhost:3030).
+The default "username"/"password" are "admin"/"afelpwd".
 
 ### 5.1. Setting up the Jena-Fuseki server
 The container is configured to manage persistence across different runs of the container. However at first launch, it needs to be populated with the RDF file generated previously.
