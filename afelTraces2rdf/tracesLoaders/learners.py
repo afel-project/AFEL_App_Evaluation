@@ -19,8 +19,8 @@ class Learner:
     '''
     def __init__(self, email: str, userid: str):
         self.email = email
-        self.userid = userid
         self.username = self.firstname = email.split('@')[0]
+        self.userid = userid if userid else self.username
         self.lastname = "Afel" # We use a arbitrary fullname as users are all experiment users
         self.__init_rdf_instances()
 
@@ -62,8 +62,8 @@ class LearnerMappingParser(TracesParser):
         self._learners_by_userid = dict()
         nb_read = 0
         for row in csv_reader:
-            if not (row[0] and row[1]):
-                LOG.warning("Incomplete learner info. : email='%s', userid='%s'. Skipping it." % (row[0], row[1]))
+            if not row[0]:
+                LOG.warning("Incomplete learner email. : email='%s', userid='%s'. Skipping it." % (row[0], row[1]))
                 continue
             l = Learner(row[0], row[1])
             self._learners_by_userid[l.userid] = l
@@ -81,6 +81,13 @@ class LearnerMappingParser(TracesParser):
 
     def get_user(self, userid: str):
         return self._learners_by_userid[userid].rdf_user
+
+    def get_user_by_email(self, email: str):
+        return list(filter(lambda x:x.email == email, self._learners_by_userid.values()))[0].rdf_user
+
+    def get_user_by_email_id(self, email_id: str):
+        email = "project.afel+%03d@gmail.com" % int(email_id)
+        return self.get_user_by_email(email)
 
     def dump_to_graph(self, graph: Graph, *args, **kwargs):
         LOG.debug("Going to dump %d learners into RDF" % len(self._learners_by_userid))

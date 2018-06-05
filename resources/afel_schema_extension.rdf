@@ -98,7 +98,12 @@
 	</rdfs:Class>
 	<!-- End Classes for AFEL Application traces -->
 	
-    <!-- 
+    <!-- Classes for AFEL Evaluation -->
+    <rdfs:Class rdf:about="Questionnaire">
+		<rdfs:label>Questionnaire</rdfs:label>
+		<rdfs:subClassOf rdf:resource="schema:CreativeWork"/>
+	</rdfs:Class>
+	<!-- End Classes for AFEL Evaluation -->
     ///////////////////////////////////////////////////////////////////////////////////////
     //
     // Properties

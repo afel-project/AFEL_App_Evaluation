@@ -10,12 +10,14 @@ from .common.namespaces import AfelNamespacesManager
 from .tracesLoaders.learners import LearnerMappingParser
 from .tracesLoaders.afelAppTraces import AfelAppTracesParser
 from .tracesLoaders.didactaliaTraces import DidactaliaLearningTracesParser
+from .tracesLoaders.afelQuestionnaire import AfelQuestionnaireParser
+from .tracesLoaders.knowledgeQuestionnaires import KnwoledgesQuestionairesParser
 from .common.utils import get_default_loggin_config
 
 LOG = logging.getLogger(__name__)
 
 # NamedTuple structure used to manipulate files or parsers collection
-COLLECTIONS_NAME = ['learners', 'didactalia', 'afelApp']
+COLLECTIONS_NAME = ['learners', 'didactalia', 'afelApp', 'appQuest', 'appQuestDetails', 'knowledge']
 TracesCollection = namedtuple('TracesCollection', COLLECTIONS_NAME)
 
 
@@ -25,7 +27,7 @@ def check_files_locations(files_collection: TracesCollection):
     :param files_collection: the collection of filenames
     :return: the files collection
     """
-    assert all((loc is None or os.path.isfile(loc) for loc in files_collection))
+    assert all((loc is None or os.path.exists(loc) for loc in files_collection))
     assert files_collection.learners is not None
     return files_collection
 
@@ -65,6 +67,19 @@ def process_traces(files_collection: TracesCollection, **kwargs):
         LOG.info("Convert Afel App traces into RDF...")
         parser.dump_to_graph(graph)
         LOG.info("Process Afel App done.")
+
+    if files_collection.appQuest is not None:
+        LOG.info("Process Afel App Questionaire traces and convert them to RDF...")
+        parser = AfelQuestionnaireParser()
+        with open(files_collection.appQuest, 'r') as f_data, open(files_collection.appQuestDetails, 'rb') as f_details:
+            parser.load_and_dump(f_details, f_data, lambda x: learners_parser.get_user_by_email_id(x), graph)
+        LOG.info("Process Afel App Questionnaire done.")
+
+    if files_collection.knowledge is not None:
+        LOG.info("Process Knowledge questionnaires and convert them to RDF...")
+        parser = KnwoledgesQuestionairesParser()
+        parser.load_and_dump(files_collection.knowledge, learners_parser, graph)
+        LOG.info("Process Afel App Questionnaire done.")
 
     return graph
 
@@ -107,10 +122,12 @@ def configure_args():
                         default='resources/raw_traces/didactalia_activity/behaviour_traces.json')
     parser.add_argument('-at', '--afelapp-traces', help='AFEL App traces json file', type=str,
                         default='resources/raw_traces/app_logs/app_logs.json')
-    # parser.add_argument('-aq', '--afelapp-questionaire', help='user mail - Userid mapping file', type=str,
-    #                    default='resources/raw_traces/userID_mapping.csv')
-    # parser.add_argument('-kq', '--knwoledge-questionaire', help='user mail - Userid mapping file', type=str,
-    #                    default='resources/raw_traces/userID_mapping.csv')
+    parser.add_argument('-aq', '--afelapp-questionaire', help='AFEL App questionaire', type=str,
+                        default='resources/raw_traces/app_questionnaire/app_questionnaire.csv')
+    parser.add_argument('-aqd', '--afelapp-quest-details', help='AFEL App questionaire detail', type=str,
+                        default='resources/raw_traces/app_questionnaire/question_details.json')
+    parser.add_argument('-kq', '--knowledge-directory', help='Knowledge questionnaire directory', type=str,
+                        default='resources/raw_traces/knowledge_questionnaire')
 
     return parser.parse_args()
 
@@ -132,8 +149,12 @@ def main():
 
     # Build traces files collections
     files_collec = TracesCollection(learners=args.user_mapping,
-                 didactalia=args.didactalia_traces,
-                 afelApp=args.afelapp_traces)
+                                    didactalia=args.didactalia_traces,
+                                    afelApp=args.afelapp_traces,
+                                    appQuest=args.afelapp_questionaire,
+                                    appQuestDetails=args.afelapp_quest_details,
+                                    knowledge=args.knowledge_directory)
+
 
     # Assert that all file exists
     try:
