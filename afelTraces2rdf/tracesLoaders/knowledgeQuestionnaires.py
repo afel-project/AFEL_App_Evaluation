@@ -17,11 +17,11 @@ class KnwoledgesQuestionairesParser:
     FILE_INFO_MAPPING = {
         'calib_geo.csv': ('AFEL_2_KNOW_PRE_GEO', 'Pre-test in geography',
                           'Pre-test questionnaire on geographical knowledge used for the 2nd AFEL evaluation'),
-        'calib_geo.csv': ('AFEL_2_KNOW_PRE_HIST', 'Pre-test in history',
+        'calib_hist.csv': ('AFEL_2_KNOW_PRE_HIST', 'Pre-test in history',
                           'Pre-test questionnaire on historical knowledge used for the 2nd AFEL evaluation'),
         'final_geo.csv': ('AFEL_2_KNOW_POST_GEO', 'Post-test in geography',
                           'Post-test questionnaire on geographical knowledge used for the 2nd AFEL evaluation'),
-        'final_geo.csv': ('AFEL_2_KNOW_POST_HIST', 'Post-test in history',
+        'final_hist.csv': ('AFEL_2_KNOW_POST_HIST', 'Post-test in history',
                           'Post-test questionnaire on historical knowledge used for the 2nd AFEL evaluation'),
         'nfa_geo.csv': ('AFEL_2_META_AFFECT_GEO', 'Need for affect questionnaire in geography',
                         'Meta-cognition test before the pre-test questionnaire to measure the need for affect in geography'),
