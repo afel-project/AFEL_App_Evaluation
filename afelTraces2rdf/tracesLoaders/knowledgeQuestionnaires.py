@@ -23,7 +23,14 @@ class KnwoledgesQuestionairesParser:
                           'Post-test questionnaire on geographical knowledge used for the 2nd AFEL evaluation'),
         'final_geo.csv': ('AFEL_2_KNOW_POST_HIST', 'Post-test in history',
                           'Post-test questionnaire on historical knowledge used for the 2nd AFEL evaluation'),
-
+        'nfa_geo.csv': ('AFEL_2_META_AFFECT_GEO', 'Need for affect questionnaire in geography',
+                        'Meta-cognition test before the pre-test questionnaire to measure the need for affect in geography'),
+        'nfa_hist.csv': ('AFEL_2_META_AFFECT_HIST', 'Need for affect questionnaire in history',
+                        'Meta-cognition test before the pre-test questionnaire to measure the need for affect in history'),
+        'nfc_geo.csv': ('AFEL_2_META_COG_GEO', 'Need for cognition questionnaire in geography',
+                        'Meta-cognition test before the pre-test questionnaire to measure the need for cognition in geography'),
+        'nfc_hist.csv': ('AFEL_2_META_COG_HIST', 'Need for cognition questionnaire in history',
+                        'Meta-cognition test before the pre-test questionnaire to measure the need for cognition in history')
     }
 
     def __init__(self):
@@ -60,7 +67,11 @@ class KnowledgeQuestionnaireParser:
 
         # For each line, get user and parse answer
         for row in csv_reader:
-            userid, user = self._extract_user(row[0], learners_parser)
+            try:
+                userid, user = self._extract_user(row[0], learners_parser)
+            except (ValueError, KeyError):
+                LOG.warning("User %s unknown. Skip it." % row[0])
+                continue
             answers = self._parse_answers(row[1:], userid, user, questions)
             # dump answers
             for answer in answers:
