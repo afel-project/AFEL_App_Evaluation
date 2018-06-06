@@ -77,13 +77,22 @@ To populate the server, follow the several steps:
 1. leave the destination *graph name* empty;
 1. select the file previously generated.
 
-### 5.2. Clear the Jena-Fuseki contained
+### 5.2. Manage datasets in Fuseki.
+You can easily manage datasets through the web interface offered by Fuseki. However, please note that when you want to re-create a persistent dataset, you should strictly follow these steps:
+
+1. remove the dataset;
+1. create a new dataset with __an other name__;
+1. upload triples to the new dataset.
+
+It appears that when a persistent dataset is destroyed, all the related data are not removed immediately. If a new dataset with the same name is created right after, these data may be attached to it, and not be destroyed as requested.
+
+### 5.3. Clear the Jena-Fuseki contained
 Once down, a docker volume is kept for persitence management. 
 To remove it, execute the following command (be sure that the container has been shut down previously):
 
     docker volume rm afel_evaluation2_fusekidata
 
-### 5.3 Sample of a SPARQL query on the data
+### 5.4. Sample of a SPARQL query on the data
 The following request lists all urls of artifacts viewed by the user 'project.afel+002'
 
     PREFIX afl: <http://vocab.afel-project.eu/>
