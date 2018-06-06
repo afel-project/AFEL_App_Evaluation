@@ -1,26 +1,25 @@
 # -*- coding: utf-8 -*-
 # author: Rémi Venant
 import logging
-import warnings
-from abc import abstractmethod
+from abc import ABCMeta
 from collections import defaultdict
 import ujson as json
 import datetime
 import urllib.parse as urlparse
-from rdflib.namespace import RDF
+from rdflib.namespace import RDF, URIRef
 from rdflib import Literal, Graph
-from .baseClasses import TracesParser
+from .baseClasses import RdfRepresentation
 from ..common.namespaces import AfelNamespacesManager, concatenate_uriref
+from .learners import LearnerMappingParser
 
-__all__ = ['AfelAppTracesParser', 'AfelAppEvent', 'AfelAppArtifactView', 'AfelAppDisplayChange',
-           'AfelAppGoBack', 'AfelAppRecommendedArtifactView', 'AfelAppViewScope']
+__all__ = ['AfelAppTracesParser']
 
 LOG = logging.getLogger(__name__)
 
 AFEL_URL = 'http://afel-project.eu/'
 
 
-class AfelAppEvent:
+class AfelAppEvent(RdfRepresentation, metaclass=ABCMeta):
     """
     Abstract class to represent an AFEL App trace
     """
@@ -32,21 +31,18 @@ class AfelAppEvent:
         self.label = trace['label']
         self.message = trace['message']
 
-    @abstractmethod
-    def dump_to_graph(self, graph: Graph):
-        pass
-
-    def complete_dump(self, activity, graph: Graph):
+    def complete_dump(self, activity, graph: Graph) -> int:
         ans = AfelNamespacesManager().afel_ns
         schema_ns = AfelNamespacesManager().schema_ns
-        graph.add((activity, ans.user, self.user))
+        graph.add((activity, ans.user, self.user.rdf))
         graph.add((activity, ans.eventID, Literal(self.id)))
         graph.add((activity, ans.eventStartDate, Literal(self.start_date)))
         graph.add((activity, ans.eventEndDate, Literal(self.end_date)))
         graph.add((activity, schema_ns.location, Literal(AFEL_URL)))
+        return 5
 
 
-class AfelAppArtifactView(AfelAppEvent): #ArtifactView
+class AfelAppArtifactView(AfelAppEvent):
     """
     Represent a Artifact viewed trace
     The trace will be mapped to an ArtifactView and an Artifact URIRef.
@@ -56,10 +52,15 @@ class AfelAppArtifactView(AfelAppEvent): #ArtifactView
         self.artifact_url = trace['label']
         self.artifact_content = trace['message']
 
-    def dump_to_graph(self, graph: Graph):
+    @property
+    def rdf(self) -> URIRef:
+        ans = AfelNamespacesManager().afel_ns
+        return concatenate_uriref(ans.ArtifactView, self.id)
+
+    def dump_to_graph(self, graph: Graph) -> int:
         ans = AfelNamespacesManager().afel_ns
         # Create activity
-        activity = concatenate_uriref(ans.ArtifactView, self.id)
+        activity = self.rdf
         graph.add((activity, RDF.type, ans.ArtifactView))
         # Create item viewed
         item_viewed = concatenate_uriref(ans.Artifact, urlparse.quote(self.artifact_url.strip()))
@@ -69,7 +70,7 @@ class AfelAppArtifactView(AfelAppEvent): #ArtifactView
         graph.add((item_viewed, ans.content, Literal(self.artifact_content)))
         # Map item viewed to the activity
         graph.add((activity, ans.artifact, item_viewed))
-        self.complete_dump(activity, graph)
+        return self.complete_dump(activity, graph) + 6
 
 
 class AfelAppRecommendedArtifactView(AfelAppEvent):
@@ -82,11 +83,16 @@ class AfelAppRecommendedArtifactView(AfelAppEvent):
         self.artifact_url = trace['label']
         self.artifact_content = trace['message']
 
-    def dump_to_graph(self, graph: Graph):
+    @property
+    def rdf(self) -> URIRef:
+        ext_ans = AfelNamespacesManager().ext_afel_ns
+        return concatenate_uriref(ext_ans.RecommendedArtifactView, self.id)
+
+    def dump_to_graph(self, graph: Graph) -> int:
         ans = AfelNamespacesManager().afel_ns
         ext_ans = AfelNamespacesManager().ext_afel_ns
         # Create activity
-        activity = concatenate_uriref(ext_ans.RecommendedArtifactView, self.id)
+        activity = self.rdf
         graph.add((activity, RDF.type, ext_ans.RecommendedArtifactView))
         # Create item viewed
         item_viewed = concatenate_uriref(ans.Artifact, urlparse.quote(self.artifact_url.strip()))
@@ -96,7 +102,7 @@ class AfelAppRecommendedArtifactView(AfelAppEvent):
         graph.add((item_viewed, ans.content, Literal(self.artifact_content)))
         # Map item viewed to the activity
         graph.add((activity, ans.artifact, item_viewed))
-        self.complete_dump(activity, graph)
+        return self.complete_dump(activity, graph) + 6
 
 
 class AfelAppGoBack(AfelAppEvent):
@@ -109,14 +115,18 @@ class AfelAppGoBack(AfelAppEvent):
         self.destination = trace['label']
         self.comment = trace['message']
 
+    @property
+    def rdf(self):
+        ext_ans = AfelNamespacesManager().ext_afel_ns
+        return concatenate_uriref(ext_ans.GoBack, self.id)
+
     def dump_to_graph(self, graph: Graph):
-        ans = AfelNamespacesManager().afel_ns
         ext_ans = AfelNamespacesManager().ext_afel_ns
         # Create activity
-        activity = concatenate_uriref(ext_ans.GoBack, self.id)
+        activity = self.rdf
         graph.add((activity, RDF.type, ext_ans.GoBack))
         graph.add((activity, ext_ans.destination, Literal(self.destination)))
-        self.complete_dump(activity, graph)
+        return self.complete_dump(activity, graph) + 2
 
 
 class AfelAppDisplayChange(AfelAppEvent):
@@ -129,14 +139,18 @@ class AfelAppDisplayChange(AfelAppEvent):
         self.display = trace['label']
         self.comment = trace['message']
 
+    @property
+    def rdf(self):
+        ext_ans = AfelNamespacesManager().ext_afel_ns
+        return concatenate_uriref(ext_ans.DisplayChange, self.id)
+
     def dump_to_graph(self, graph: Graph):
-        ans = AfelNamespacesManager().afel_ns
         ext_ans = AfelNamespacesManager().ext_afel_ns
         # Create activity
-        activity = concatenate_uriref(ext_ans.DisplayChange, self.id)
+        activity = self.rdf
         graph.add((activity, RDF.type, ext_ans.DisplayChange))
         graph.add((activity, ext_ans.display, Literal(self.display)))
-        self.complete_dump(activity, graph)
+        return self.complete_dump(activity, graph) + 2
 
 
 class AfelAppViewScope(AfelAppEvent):
@@ -149,11 +163,16 @@ class AfelAppViewScope(AfelAppEvent):
         self.scope = trace['label']
         self.comment = trace['message']
 
+    @property
+    def rdf(self):
+        ext_ans = AfelNamespacesManager().ext_afel_ns
+        return concatenate_uriref(ext_ans.ScopeView, self.id)
+
     def dump_to_graph(self, graph: Graph):
         ans = AfelNamespacesManager().afel_ns
         ext_ans = AfelNamespacesManager().ext_afel_ns
         # Create activity
-        activity = concatenate_uriref(ext_ans.ScopeView, self.id)
+        activity = self.rdf
         graph.add((activity, RDF.type, ext_ans.ScopeView))
         # Create item viewed
         item_viewed = concatenate_uriref(ans.Artifact, urlparse.quote(self.scope.strip()))
@@ -162,28 +181,31 @@ class AfelAppViewScope(AfelAppEvent):
         graph.add((item_viewed, ans.content, Literal(self.comment)))
         # Map item viewed to the activity
         graph.add((activity, ans.artifact, item_viewed))
-        self.complete_dump(activity, graph)
+        return self.complete_dump(activity, graph) + 5
 
 
-class AfelAppTracesParser(TracesParser):
+class AfelAppTracesParser:
     """
     The parser to load a json file of AFEL App traces and create related RDF triples
     """
     def __init__(self):
         self._activities = []
 
-    def load(self, f, user_finder, *args, **kwargs):
+    def load_and_dump(self, fin, learners_parser: LearnerMappingParser,  graph: Graph) -> int:
+        self.load(fin, learners_parser)
+        return self.dump_to_graph(graph)
+
+    def load(self, f, learners_parser: LearnerMappingParser):
         raw_traces = json.load(f)
         raw_traces = raw_traces['hits']['hits']
 
-        traces = sorted((self._process_raw_trace(rt, user_finder) for rt in raw_traces), key=lambda x:x['time'])
+        traces = sorted((self._process_raw_trace(rt, learners_parser) for rt in raw_traces), key=lambda x: x['time'])
         LOG.debug("%d AFEL traces read." % len(traces))
         self._process_traces(traces)
 
-    def dump_to_graph(self, graph: Graph, *args, **kwargs):
+    def dump_to_graph(self, graph: Graph) -> int:
         LOG.debug("Going to dump %d AFEL traces into RDF" % len(self._activities))
-        for activity in self._activities:
-            activity.dump_to_graph(graph)
+        return sum((a.dump_to_graph(graph) for a in self._activities))
 
     def _process_traces(self, traces):
         action_type_mapper = defaultdict(lambda: (lambda x: None))
@@ -200,12 +222,13 @@ class AfelAppTracesParser(TracesParser):
                 self._activities.append(activity)
 
     @staticmethod
-    def _process_raw_trace(rt, user_finder):
+    def _process_raw_trace(rt, learners_parser: LearnerMappingParser):
         tr = rt['_source']
         tr['_id'] = rt['_id']
-        tr['time'] = datetime.datetime.fromtimestamp(tr['time'] / 1000) + datetime.timedelta(milliseconds=tr['time'] % 1000)
+        tr['time'] = datetime.datetime.fromtimestamp(tr['time'] / 1000) \
+                     + datetime.timedelta(milliseconds=tr['time'] % 1000)
         tr['user_id'] = tr['user']
-        tr['user'] = user_finder(tr['user_id'])
+        tr['user'] = learners_parser.get_user_by_userid(tr['user_id'])
         return tr
 
 

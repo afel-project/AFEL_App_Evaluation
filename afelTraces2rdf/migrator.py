@@ -11,7 +11,7 @@ from .tracesLoaders.learners import LearnerMappingParser
 from .tracesLoaders.afelAppTraces import AfelAppTracesParser
 from .tracesLoaders.didactaliaTraces import DidactaliaLearningTracesParser
 from .tracesLoaders.afelQuestionnaire import AfelQuestionnaireParser
-from .tracesLoaders.knowledgeQuestionnaires import KnwoledgesQuestionairesParser
+from .tracesLoaders.knowledgeQuestionnaires import KnowledgeQuestionairesParser
 from .common.utils import get_default_loggin_config
 
 LOG = logging.getLogger(__name__)
@@ -19,6 +19,33 @@ LOG = logging.getLogger(__name__)
 # NamedTuple structure used to manipulate files or parsers collection
 COLLECTIONS_NAME = ['learners', 'didactalia', 'afelApp', 'appQuest', 'appQuestDetails', 'knowledge']
 TracesCollection = namedtuple('TracesCollection', COLLECTIONS_NAME)
+
+
+class GraphDuplicateWatcher(Graph):
+    __NORMAL_PREFIXES = ["http://vocab.afel-project.eu/Artifact",]
+
+    def __init__(self, *largs, **kwargs):
+        super().__init__(*largs, **kwargs)
+        self.__duplicate_checker = set()
+        self.__duplicates_count = 0
+
+    def add(self, triple):
+        hash_key = "_".join((p for p in triple))
+        if hash_key in self.__duplicate_checker:
+            if not self.__is_duplicates_normal(triple):
+                LOG.warning("DUPLICATE FOUND: %s %s %s" % triple)
+            self.__duplicates_count += 1
+        else:
+            self.__duplicate_checker.add(hash_key)
+        super().add(triple)
+
+    @classmethod
+    def __is_duplicates_normal(cls, triple):
+        return any((triple[0].startswith(pr) for pr in cls.__NORMAL_PREFIXES))
+
+    @property
+    def duplicates_count(self):
+        return self.__duplicates_count
 
 
 def check_files_locations(files_collection: TracesCollection):
@@ -32,59 +59,56 @@ def check_files_locations(files_collection: TracesCollection):
     return files_collection
 
 
-def process_traces(files_collection: TracesCollection, **kwargs):
+def process_traces(files_collection: TracesCollection):
     """
     Create parser for each traces collection and parse & convert all traces
     :param files_collection: the traces files collection
-    :param kwargs: extra arg, especially 'dialect' and 'has_header' for the csv parser (learners)
     :return: the parsers collection as a TracesCollection namedtuple
     """
 
-    graph = Graph()
+    graph = GraphDuplicateWatcher()  # TODO : Replace with classic Graph()
+    total_nb_triples = 0
 
-    LOG.info("Parse learners...")
+    LOG.info("Process learners...")
     learners_parser = LearnerMappingParser()
     with open(files_collection.learners, 'r') as f:
-        learners_parser.load(f)
-    LOG.info("Convert learners...")
-    learners_parser.dump_to_graph(graph)
+        total_nb_triples += learners_parser.load_and_dump(f, graph)
     LOG.info("Process learners done.")
 
     if files_collection.didactalia is not None:
-        LOG.info("Parse Didactalia traces...")
+        LOG.info("Process Didactalia traces...")
         parser = DidactaliaLearningTracesParser()
         with open(files_collection.didactalia, 'rb') as f:
-            parser.load(f, lambda x: learners_parser.get_user(x))
-        LOG.info("Convert Didactalia traces into RDF...")
-        parser.dump_to_graph(graph)
+            total_nb_triples += parser.load_and_dump(f, learners_parser, graph)
         LOG.info("Process Didactalia traces done.")
 
     if files_collection.afelApp is not None:
         LOG.info("Process Afel App traces...")
         parser = AfelAppTracesParser()
         with open(files_collection.afelApp, 'rb') as f:
-            parser.load(f, lambda x: learners_parser.get_user(x))
-        LOG.info("Convert Afel App traces into RDF...")
-        parser.dump_to_graph(graph)
+            total_nb_triples += parser.load_and_dump(f, learners_parser, graph)
         LOG.info("Process Afel App done.")
 
     if files_collection.appQuest is not None:
-        LOG.info("Process Afel App Questionaire traces and convert them to RDF...")
+        LOG.info("Process Afel App Questionaire traces...")
         parser = AfelQuestionnaireParser()
         with open(files_collection.appQuest, 'r') as f_data, open(files_collection.appQuestDetails, 'rb') as f_details:
-            parser.load_and_dump(f_details, f_data, lambda x: learners_parser.get_user_by_email_id(x), graph)
+            total_nb_triples += parser.load_and_dump(f_details, f_data, learners_parser, graph)
         LOG.info("Process Afel App Questionnaire done.")
 
     if files_collection.knowledge is not None:
-        LOG.info("Process Knowledge questionnaires and convert them to RDF...")
-        parser = KnwoledgesQuestionairesParser()
-        parser.load_and_dump(files_collection.knowledge, learners_parser, graph)
-        LOG.info("Process Afel App Questionnaire done.")
+        LOG.info("Process knowledge questionnaires...")
+        parser = KnowledgeQuestionairesParser()
+        total_nb_triples += parser.load_and_dump(files_collection.knowledge, learners_parser, graph)
+        LOG.info("Process knowledge questionnaires done.")
 
+    LOG.info("%d triples have been generated." % total_nb_triples)
+    LOG.info("%d triples are duplicates" % graph.duplicates_count)
+    LOG.info("%d triples should have been written" % (total_nb_triples - graph.duplicates_count))
     return graph
 
 
-def save_graph_to_file(graph:Graph, destination: str, format:str='pretty-xml', **kwargs):
+def save_graph_to_file(graph:Graph, destination: str, format: str='pretty-xml', **kwargs):
     """
     Save an RDF into a file
     :param graph: the RDF Graph
@@ -136,7 +160,7 @@ def main():
     get_default_loggin_config(logging.INFO)
     args = configure_args()
 
-    #Init namespace manager with the different given arguments
+    # Init namespace manager with the different given arguments
     try:
         AfelNamespacesManager(afel_source=args.afel_schema,
                               afel_publicID=args.afel_publicid,
@@ -154,7 +178,6 @@ def main():
                                     appQuest=args.afelapp_questionaire,
                                     appQuestDetails=args.afelapp_quest_details,
                                     knowledge=args.knowledge_directory)
-
 
     # Assert that all file exists
     try:
