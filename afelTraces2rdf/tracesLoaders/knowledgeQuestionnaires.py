@@ -5,6 +5,7 @@ import os
 import re
 import logging
 from rdflib import Graph
+import pytz
 import dateutil.parser as dateparser
 from .baseClasses import Questionnaire, Question, IntRatingAnswer, User
 from .learners import LearnerMappingParser
@@ -53,6 +54,8 @@ class KnowledgeQuestionairesParser:
 
 
 class KnowledgeQuestionnaireParser:
+    _TIMEZONE = pytz.timezone('Europe/Madrid')
+
     def __init__(self, quest_id, quest_name, quest_comment):
         self.quest_id = quest_id
         self.quest_name = quest_name
@@ -105,9 +108,9 @@ class KnowledgeQuestionnaireParser:
             uid = int(uid)
         return learners_parser.get_user_by_internalid(uid)
 
-    @staticmethod
-    def _parse_answers(answers, user: User, questions):
+    @classmethod
+    def _parse_answers(cls, answers, user: User, questions):
         # all the answer are lickert from 1 to 5 execpt for the last 2 ones
         # last-1 answer is the time, last is the ip
-        date = dateparser.parse(answers[-2])
+        date = cls._TIMEZONE.localize(dateparser.parse(answers[-2])).astimezone(pytz.utc)
         return [IntRatingAnswer(user, date, questions[i], val) for i, val in enumerate(answers[:-2])]

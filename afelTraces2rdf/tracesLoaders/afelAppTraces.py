@@ -5,6 +5,7 @@ from abc import ABCMeta
 from collections import defaultdict
 import ujson as json
 import datetime
+import pytz
 import urllib.parse as urlparse
 from rdflib.namespace import RDF, URIRef
 from rdflib import Literal, Graph
@@ -188,6 +189,8 @@ class AfelAppTracesParser:
     """
     The parser to load a json file of AFEL App traces and create related RDF triples
     """
+    _TIMEZONE = pytz.timezone('UTC')
+
     def __init__(self):
         self._activities = []
 
@@ -221,12 +224,12 @@ class AfelAppTracesParser:
             if activity is not None:
                 self._activities.append(activity)
 
-    @staticmethod
-    def _process_raw_trace(rt, learners_parser: LearnerMappingParser):
+    @classmethod
+    def _process_raw_trace(cls, rt, learners_parser: LearnerMappingParser):
         tr = rt['_source']
         tr['_id'] = rt['_id']
-        tr['time'] = datetime.datetime.fromtimestamp(tr['time'] / 1000) \
-                     + datetime.timedelta(milliseconds=tr['time'] % 1000)
+        dt = datetime.datetime.fromtimestamp(tr['time'] // 1000)  # convert UTC unix TS im ms to naive dt in sec.
+        tr['time'] = cls._TIMEZONE.localize(dt).astimezone(pytz.utc)  # convert naive dt into aware dt
         tr['user_id'] = tr['user']
         tr['user'] = learners_parser.get_user_by_userid(tr['user_id'])
         return tr

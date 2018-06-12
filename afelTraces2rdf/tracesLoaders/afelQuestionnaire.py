@@ -4,6 +4,7 @@ import logging
 import csv
 import ujson as json
 import datetime
+import pytz
 from rdflib import Graph
 from .baseClasses import Questionnaire, Question, CommentAnswer, IntRatingAnswer, FloatRatingAnswer
 from .learners import LearnerMappingParser
@@ -42,7 +43,7 @@ class AfelQuestionnaireParser:
         questions = [Question(qid, details[qid], questionnaire) for qid in headers[1:]]
         nb_triples += sum((q.dump_to_graph(graph) for q in questions))
         # set a common date for all action as it is not given in data
-        date = datetime.datetime(year=2018, month=5, day=23, hour=10)
+        date = datetime.datetime(year=2018, month=5, day=20, tzinfo=pytz.utc)
         # Process answers
         nb_users = 0
         nb_answers = 0
